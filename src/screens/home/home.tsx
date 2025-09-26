@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Button, FlatList, Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import {style} from './styles'
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 export interface Welcome {
     image:       string[];
@@ -31,6 +33,8 @@ export enum Size {
 
 export const Home = () => {
     const [valueApi, setValueApi] = useState<Welcome[]>([])
+    const [match, setMatch] = useState([])
+    const [showMatch, setShowMatch] = useState(false)
 
     const requestApi = async () => {
         await axios.get('http://localhost:3000/dogs/getAllDogs').then((resp) => {
@@ -43,36 +47,66 @@ export const Home = () => {
         requestApi()
     }, [])
 
-    console.log("valueApi[0]?.image[0]", valueApi[0]?.image[0])
+    const handlePressNo = () => {
+        setValueApi((prevState) => prevState.slice(1))
+    }
+
+    const handlePressYes = () => {
+        setMatch((prevMatch) => [...prevMatch, valueApi[0]])
+        setValueApi((prevState) => prevState.slice(1))
+    }
+
 
     return (
         <View style={style.container}>
-            <TouchableOpacity style={style.content}>
-                <Image
-                  source={{uri: valueApi[0]?.image[0]}} 
-                  style={{
-                    height: '90%',
-                    width: '90%',
-                    backgroundColor:'red'
-                  }}
-                  resizeMode='contain'
-                />
-            </TouchableOpacity>
+            {
+                showMatch ? 
+                <>
+                    <FlatList
+                        data={match}
+                        renderItem={({item})=> {
+                            return (
+                                <Image
+                                    source={{uri: item?.image[0]}} 
+                                    style={{
+                                        height: 200,
+                                        width: 200,
+                                        backgroundColor:'red'
+                                    }}
+                                    resizeMode='contain'
+                                />
+                            )
+                        }}
+                    />
+                </> 
+                : 
+                <>
+                    <TouchableOpacity style={style.content}>
+                        <Image
+                        source={{uri: valueApi[0]?.image[0]}} 
+                        style={{
+                            height: '90%',
+                            width: '90%',
+                            backgroundColor:'red'
+                        }}
+                        resizeMode='contain'
+                        />
+                    </TouchableOpacity>
+                    <View style={style.contentButton}>
+                        <TouchableOpacity onPress={handlePressNo} style={style.buttonNo}>
+                            <AntDesign name="close" size={24} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handlePressYes} style={style.buttonYes}>
+                            <AntDesign name="heart" size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
+                </>
+            }
+            <Button
+                title='Ver matchs'
+                onPress={() => setShowMatch(!showMatch)}
+            />
         </View>
     )
 }
 
-const style = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    content: {
-        height: '70%',
-        width: '80%',
-        backgroundColor: '#FFA500',
-        alignItems: 'center',
-        justifyContent: 'center'
-    }
-})
